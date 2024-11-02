@@ -1,11 +1,12 @@
 use notify_rust::Notification;
 use rodio::{Decoder, OutputStream, Source};
-use std::fs::{self, File};
+use std::fs::{self, File};  // use std::path::Path;
 use std::io::BufReader;
 use std::{env, thread};
 use std::time::Duration;
 use chrono::prelude::*;
 use toml::Value;
+use std::fs::create_dir_all;
 
 fn play_audio(file_path: &str) {
     // Get a speaker stream handle to send sounds to
@@ -32,8 +33,29 @@ fn main() {
         .parse::<i64>()
         .expect("Please provide a valid number for the duration.");
 
+    // Define the path to the configuration file
+    let config_dir = dirs::home_dir().unwrap().join(".config/take-a-break");
+    let config_file_path = config_dir.join("config.toml");
+
+    // Check if the configuration directory exists, if not, create it
+    if !config_dir.exists() {
+        create_dir_all(&config_dir).expect("Failed to create configuration directory");
+    }
+
+    // Check if the configuration file exists, if not, create it with default content
+    if !config_file_path.exists() {
+        let default_config = r#"[sound]
+file = "path/to/sounds/new-message.wav"
+"#;
+        fs::write(&config_file_path, default_config).expect("Failed to create default config.toml");
+
+        println!("The config.toml file has been created at: {}", config_file_path.display());
+        println!("Please edit the config.toml file and then re-run the program.");
+        return; // Exit the program to allow the user to edit the config file
+    }
+
     // Read the TOML configuration file
-    let config_string = fs::read_to_string("configs/config.toml")
+    let config_string = fs::read_to_string(config_file_path)
         .expect("Failed to read config.toml");
 
     // Parse the TOML configuration

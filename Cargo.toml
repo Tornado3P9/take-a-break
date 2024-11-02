@@ -1,10 +1,11 @@
 [package]
 name = "take-a-break"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 [dependencies]
 chrono = "0.4.38"
+dirs = "5.0.1"
 notify-rust = "4.11.3"
 rodio = "0.19.0"
 toml = "0.8.19"
