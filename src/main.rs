@@ -88,10 +88,10 @@ body = "Time for a break! Stretch, hydrate, or take a short walk."
     thread::spawn(move || {
         thread::sleep(duration_until_play);
         if let Err(e) = Notification::new()
-            .summary("Reminder:")
+            .summary("Reminder")
             .body(&notification_body)
             .icon("dialog-information")
-            .timeout(10000) // milliseconds
+            .timeout(20000) // milliseconds
             .show() {
                 println!("Failed to show notification: {}", e);
             }
