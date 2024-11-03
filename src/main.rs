@@ -1,12 +1,12 @@
 use notify_rust::Notification;
 use rodio::{Decoder, OutputStream, Source};
+use std::fs::create_dir_all;
 use std::fs::{self, File};  // use std::path::Path;
 use std::io::BufReader;
 use std::{env, thread};
 use std::time::Duration;
 use chrono::prelude::*;
 use toml::Value;
-use std::fs::create_dir_all;
 
 fn play_audio(file_path: &str) {
     // Get a speaker stream handle to send sounds to
@@ -46,6 +46,9 @@ fn main() {
     if !config_file_path.exists() {
         let default_config = r#"[sound]
 file = "path/to/sounds/new-message.wav"
+
+[notification]
+body = "Time for a break! Stretch, hydrate, or take a short walk."
 "#;
         fs::write(&config_file_path, default_config).expect("Failed to create default config.toml");
 
@@ -69,6 +72,13 @@ file = "path/to/sounds/new-message.wav"
         .expect("Sound file path is not specified in config.toml")
         .to_owned(); // Clone the string here
 
+    // Extract the notification body and clone it to be used in the thread
+    let notification_body = config.get("notification")
+        .and_then(|n| n.get("body"))
+        .and_then(|b| b.as_str())
+        .expect("Notification body is not specified in config.toml")
+        .to_owned(); // Clone the string here
+
     // Schedule the sound to play after the specified duration
     let when = Local::now() + chrono::Duration::minutes(duration_minutes);
     println!("Scheduling sound to play at {}", when);
@@ -79,13 +89,13 @@ file = "path/to/sounds/new-message.wav"
         thread::sleep(duration_until_play);
         if let Err(e) = Notification::new()
             .summary("Reminder:")
-            .body("Trink was, beweg dich, geh raus")
+            .body(&notification_body)
             .icon("dialog-information")
             .timeout(10000) // milliseconds
             .show() {
                 println!("Failed to show notification: {}", e);
             }
-        play_audio(&sound_file); // Use the cloned string here
+        play_audio(&sound_file);
     });
 
     // Instead of sleeping the main thread, we can wait for the spawned thread to finish
